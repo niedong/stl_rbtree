@@ -57,8 +57,8 @@ struct rb_node
 #endif
 
 /*
- * To make rbtree capable of storing multi key-equivalent values, the
- * compare function must return a strictly less order of two nodes.
+ * To make rbtree capable of storing multiple key-equivalent values,
+ * the compare function must return a strictly less order of two nodes.
  * 
  * Extra argument can be provided if needed.
  */
