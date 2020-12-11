@@ -1,0 +1,3 @@
+language: c
+dist: xenial
+script: cd src && make && ./stl_rb
