@@ -287,6 +287,34 @@ protected:
     }
 
     void
+    tst_find(void) const
+    {
+        for (const auto &samples : m_Samples)
+        {
+            Ordered<T> val(samples);
+
+            if ((m_STL.find(samples) == m_STL.end() &&
+                rb_find(&m_RBT, &val.m_Node) != rb_head(&m_RBT)) ||
+                (*m_STL.find(samples) != Ordered<T>::convert(&val.m_Node)))
+            {
+                throw std::runtime_error("<find|find> failed");
+            }
+        }
+    }
+
+    void
+    tst_clear(void)
+    {
+        m_STL.clear();
+        rb_clear(&m_RBT);
+
+        if (!validate())
+        {
+            throw std::runtime_error("<clear|clear> failed");
+        }
+    }
+
+    void
     get_stl_content(typename ST::const_iterator stl_begin,
         typename ST::const_iterator stl_end,
         std::stringstream &content) const
@@ -365,20 +393,20 @@ public:
         return m_Samples.size();
     }
 
-    void
+    int
     run(void)
     {
-        tst_insert();
-
         static const std::function<void()> op_func[] = {
             [&] { tst_eqrange(); }, [&] { tst_count(); },
-            [&] { tst_count(); }
+            [&] { tst_bound(); }, [&] { tst_find(); }
         };
-
-        std::array<std::thread, ARRSZ(op_func)> thr;
 
         try
         {
+            tst_insert();
+
+            std::array<std::thread, ARRSZ(op_func)> thr;
+
             for (size_t i = 0; i < thr.size(); ++i)
             {
                 thr[i] = std::thread(op_func[i]);
@@ -388,13 +416,19 @@ public:
             {
                 th.join();
             }
+            
+            tst_erase();
+            
+            tst_clear();
         }
         catch (const std::exception &e)
         {
             std::cout << e.what() << std::endl;
+
+            return 1;
         }
 
-        tst_erase();
+        return 0;
     }
 };
 
@@ -405,8 +439,5 @@ int main(int argc, char **argv)
     Suit<size_t, std::set<size_t>, 0> s1(tstc);
     Suit<size_t, std::multiset<size_t>, 1> s2(tstc);
 
-    s1.run();
-    s2.run();
-
-    return 0;
+    return s1.run() | s2.run();
 }
